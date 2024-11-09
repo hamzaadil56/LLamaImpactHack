@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-# client = Groq(api_key=GROQ_API_KEY)
 
 # Function to encode an image from a file path to base64
 def encode_image_from_path(image_path: str) -> str:
@@ -18,14 +17,9 @@ def encode_image_from_path(image_path: str) -> str:
 # Main function to analyze an image using Groq's API
 def check_for_dry_eyes(
         image_source: Union[str, bytes], 
-        # date: datetime, 
+        # date:datetime,
         api_key: str=GROQ_API_KEY,
         is_url: bool = True) -> str:
-
-    # if date:
-    #     date_str = date.strftime("%Y-%m-%d %H:%M:%S")
-    # else:
-    #     return ValueError
     
     if api_key:
         client = Groq(api_key=api_key)
@@ -40,13 +34,16 @@ def check_for_dry_eyes(
         }
     else:
         # Encoding the local image to base64
-        base64_image = encode_image_from_path(image_source)
-        image_content = {
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:image/jpeg;base64,{base64_image}",
-            },
-        }
+        try:
+            base64_image = encode_image_from_path(image_source)
+            image_content = {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{base64_image}",
+                },
+            }
+        except:
+            raise Exception("Something went wrong")
 
     # Sending the image to Groq API for analysis
     try:
