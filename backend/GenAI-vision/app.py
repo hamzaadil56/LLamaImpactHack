@@ -20,7 +20,7 @@ def check_for_dry_eyes(
         image_source: Union[str, bytes], 
         # date: datetime, 
         api_key: str,
-        is_url: bool = False) -> str:
+        is_url: bool = True) -> str:
     # Format the date as a string if needed for API or logging purposes
 
     # if date:
