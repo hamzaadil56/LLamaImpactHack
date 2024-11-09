@@ -11,8 +11,33 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Function to encode an image from a file path to base64
 def encode_image_from_path(image_path: str) -> str:
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+    """
+    Encodes a local image file to a base64 string.
+
+    Parameters:
+    ----------
+    image_path : str
+        The file path of the image to be encoded.
+
+    Returns:
+    -------
+    str
+        A base64-encoded string representing the image.
+
+    Raises:
+    ------
+    FileNotFoundError
+        If the specified file does not exist.
+    IOError
+        If an error occurs during file reading.
+    """
+    try:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode('utf-8')
+    except FileNotFoundError:
+        raise FileNotFoundError("The specified image file was not found.")
+    except Exception as e:
+        raise Exception(f"Error encoding image: {e}")
 
 # Main function to analyze an image using Groq's API
 def check_for_dry_eyes(
@@ -21,10 +46,39 @@ def check_for_dry_eyes(
         api_key: str=GROQ_API_KEY,
         is_url: bool = True) -> str:
     
-    if api_key:
-        client = Groq(api_key=api_key)
-    else:
-        raise Exception("No API key provided")
+    """
+    Analyzes an image for signs of dry eyes using the Groq API.
+
+    Parameters:
+    ----------
+    image_source : Union[str, bytes]
+        The image input; can be a URL (str) if `is_url` is True, or a file path (str) if `is_url` is False.
+    api_key : str, optional
+        The API key for Groq authentication, defaulting to the `GROQ_API_KEY` environment variable.
+    is_url : bool, optional
+        Determines if `image_source` is a URL (True) or a local file path (False).
+
+    Returns:
+    -------
+    str
+        The Groq API's response, ideally a Yes/No assessment of dry-eye symptoms.
+
+    Raises:
+    ------
+    ValueError
+        If the `api_key` is missing.
+    FileNotFoundError
+        If a specified file for local image encoding does not exist.
+    IOError
+        For general issues with file access.
+    Exception
+        For any API communication errors or unexpected issues.
+    """
+    
+    if not api_key:
+        raise ValueError("API key is missing. Ensure GROQ_API_KEY is set.")
+
+    client = Groq(api_key=api_key)
 
     # Defining the image content for the API request
     if is_url:
@@ -42,8 +96,8 @@ def check_for_dry_eyes(
                     "url": f"data:image/jpeg;base64,{base64_image}",
                 },
             }
-        except:
-            raise Exception("Something went wrong")
+        except Exception as e:
+            raise Exception(f"Failed to process image from path: {e}")
 
     # Sending the image to Groq API for analysis
     try:
@@ -67,9 +121,15 @@ def check_for_dry_eyes(
             stream=False,
             stop=None,
         )
-    except:
-        raise Exception("Something went wrong")
+    except ConnectionError:
+        raise ConnectionError("Failed to connect to the Groq API. Check your network.")
+    except Exception as e:
+        raise Exception(f"API request failed: {e}")
 
-    # Return the API response content
-    return chat_completion.choices[0].message.content
+    # Returning the API response content
+    try:
+        response_content = chat_completion.choices[0].message.content
+    except (IndexError, AttributeError) as e:
+        raise ValueError(f"Unexpected API response structure: {e}")
 
+    return response_content
