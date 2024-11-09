@@ -6,8 +6,8 @@ from groq import Groq
 from dotenv import load_dotenv
 
 # Load environment variables
-# load_dotenv()
-# GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 # client = Groq(api_key=GROQ_API_KEY)
 
 # Function to encode an image from a file path to base64
@@ -19,9 +19,8 @@ def encode_image_from_path(image_path: str) -> str:
 def check_for_dry_eyes(
         image_source: Union[str, bytes], 
         # date: datetime, 
-        api_key: str,
+        api_key: str=GROQ_API_KEY,
         is_url: bool = True) -> str:
-    # Format the date as a string if needed for API or logging purposes
 
     # if date:
     #     date_str = date.strftime("%Y-%m-%d %H:%M:%S")
@@ -31,16 +30,16 @@ def check_for_dry_eyes(
     if api_key:
         client = Groq(api_key=api_key)
     else:
-        return ValueError
+        raise Exception("No API key provided")
 
-    # Define the image content for the API request
+    # Defining the image content for the API request
     if is_url:
         image_content = {
             "type": "image_url",
             "image_url": {"url": image_source},
         }
     else:
-        # Encode the local image to base64
+        # Encoding the local image to base64
         base64_image = encode_image_from_path(image_source)
         image_content = {
             "type": "image_url",
@@ -49,7 +48,7 @@ def check_for_dry_eyes(
             },
         }
 
-    # Send the image to Groq API for analysis
+    # Sending the image to Groq API for analysis
     try:
         chat_completion = client.chat.completions.create(
             model="llama-3.2-90b-vision-preview",
@@ -76,3 +75,4 @@ def check_for_dry_eyes(
 
     # Return the API response content
     return chat_completion.choices[0].message.content
+
