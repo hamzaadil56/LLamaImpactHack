@@ -3,6 +3,7 @@ import base64
 from typing import Union
 from datetime import datetime
 from groq import Groq
+from fastapi import HTTPException
 from dotenv import load_dotenv
 
 # Load environment variables
