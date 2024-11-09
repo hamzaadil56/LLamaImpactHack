@@ -13,6 +13,7 @@ import {
 import { Camera, CameraType, CameraView } from "expo-camera";
 import * as Permissions from "expo-permissions";
 import { launchCameraAsync } from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 
 const App = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -53,6 +54,43 @@ const App = () => {
     console.log(image);
   };
 
+  const askAI = async () => {
+    if (!imagePreview) {
+      Alert.alert("No image", "Please capture an image first.");
+      return;
+    }
+
+    try {
+      // Read the file as binary data
+      const fileUri = imagePreview;
+      const fileBytes = await FileSystem.readAsStringAsync(fileUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Convert base64 to byte array if needed, or send as-is if base64 is accepted
+      const byteArray = Uint8Array.from(atob(fileBytes), (c) =>
+        c.charCodeAt(0)
+      );
+
+      const formData = new FormData();
+      formData.append("is_url", JSON.stringify(false));
+      formData.append("image", "adsad");
+
+      const response = await fetch("http://localhost:8000/analyze-image/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data", // or application/json, depending on backend
+        },
+        body: formData, // Send byte array directly in body
+      });
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Error uploading image:", error.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {!isCameraActive ? (
@@ -68,7 +106,7 @@ const App = () => {
                   source={{ uri: imagePreview }}
                   style={{ width: 200, height: 200 }}
                 />
-                <Button title="Ask AI" />
+                <Button title="Ask AI" onPress={askAI} />
               </View>
             )}
           </View>
