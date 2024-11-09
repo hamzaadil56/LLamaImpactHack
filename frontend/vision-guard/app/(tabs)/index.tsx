@@ -7,14 +7,18 @@ import {
   SafeAreaView,
   Alert,
   Platform,
+  Image,
+  Button,
 } from "react-native";
 import { Camera, CameraType, CameraView } from "expo-camera";
 import * as Permissions from "expo-permissions";
+import { launchCameraAsync } from "expo-image-picker";
 
 const App = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
   const cameraRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const requestCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -39,25 +43,50 @@ const App = () => {
     setIsCameraActive(false);
   };
 
+  const takeImageHandler = async () => {
+    const image = await launchCameraAsync({
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.5,
+    });
+    setImagePreview(image?.assets[0]?.uri);
+    console.log(image);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {!isCameraActive ? (
         <View style={styles.content}>
           <Text style={styles.heading}>Welcome To Vision Guard</Text>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleStartMonitoring}
-          >
-            <Text style={styles.buttonText}>Start Eye Monitoring</Text>
+          <TouchableOpacity style={styles.button} onPress={takeImageHandler}>
+            <Text style={styles.buttonText}>Test Eye</Text>
           </TouchableOpacity>
+          <View>
+            {imagePreview && (
+              <View>
+                <Image
+                  source={{ uri: imagePreview }}
+                  style={{ width: 200, height: 200 }}
+                />
+                <Button title="Ask AI" />
+              </View>
+            )}
+          </View>
         </View>
       ) : (
         <CameraView style={styles.camera} facing={"front"}>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.text}>Flip Camera</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleStopMonitoring}
+          >
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleStopMonitoring}
+          >
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
         </CameraView>
       )}
     </SafeAreaView>
@@ -72,6 +101,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: "center",
+    justifyContent: "center",
     paddingTop: 50,
     paddingHorizontal: 20,
   },
@@ -84,17 +114,34 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#4CAF50",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
+    width: 100, // Adjust size as needed
+    height: 100,
+    borderRadius: 50,
     elevation: 3,
     shadowColor: "#000",
+    textAlign: "center",
+    justifyContent: "center",
+    alignItems: "center",
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "#ff4444",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   text: {
     fontSize: 24,
@@ -109,7 +156,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "600",
   },
   cameraContainer: {
