@@ -14,12 +14,16 @@ import { Camera, CameraType, CameraView } from "expo-camera";
 import * as Permissions from "expo-permissions";
 import { launchCameraAsync } from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import CustomAlert from "@/components/CustomAlert";
 
 const App = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [aiResponse, setAIResponse] = useState("");
+  // ... (previous state declarations)
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ type: "", message: "" });
 
   const requestCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -85,7 +89,7 @@ const App = () => {
       });
 
       const response = await fetch(
-        "https://44a7-223-29-232-28.ngrok-free.app/analyze-image/",
+        "https://b9d8-223-29-232-28.ngrok-free.app/analyze-image/",
         {
           method: "POST",
           headers: {
@@ -96,6 +100,18 @@ const App = () => {
       );
 
       const data = await response.json();
+      if (data?.result === "Yes.") {
+        setAlertConfig({
+          type: "danger",
+          message: "Thats enough screen time for you!",
+        });
+      } else if (data?.result === "No.") {
+        setAlertConfig({
+          type: "success",
+          message: "All Okay. You are good to use your phone!",
+        });
+      }
+      setAlertVisible(true);
       console.log(data);
       setAIResponse(data?.result);
     } catch (error) {
@@ -118,10 +134,14 @@ const App = () => {
               <View>
                 <Image
                   source={{ uri: imagePreview }}
-                  style={{ width: 200, height: 100 }}
+                  style={{ width: 300, height: 100 }}
                 />
                 <Button
-                  title={isLoading ? "loading..." : "Ask AI"}
+                  title={
+                    isLoading
+                      ? "loading..."
+                      : "Click To Here Ask AI About Your Eye"
+                  }
                   onPress={askAI}
                 />
               </View>
@@ -130,7 +150,13 @@ const App = () => {
 
           {aiResponse && (
             <View>
-              <Text>{aiResponse}</Text>
+              <Text>
+                {aiResponse === "Yes."
+                  ? "Thats enough screen time for you"
+                  : aiResponse === "No."
+                  ? "All Ok! You are good to go."
+                  : "Try Again"}
+              </Text>
             </View>
           )}
         </View>
@@ -150,6 +176,12 @@ const App = () => {
           </TouchableOpacity>
         </CameraView>
       )}
+      <CustomAlert
+        visible={alertVisible}
+        type={alertConfig.type}
+        message={alertConfig.message}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 };
