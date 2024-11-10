@@ -17,13 +17,12 @@ import * as FileSystem from "expo-file-system";
 
 const App = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [hasPermission, setHasPermission] = useState(false);
-  const cameraRef = useRef(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [aiResponse, setAIResponse] = useState("");
 
   const requestCameraPermission = async () => {
     const { status } = await Camera.requestCameraPermissionsAsync();
-    setHasPermission(status === "granted");
 
     if (status === "granted") {
       setIsCameraActive(true);
@@ -62,6 +61,7 @@ const App = () => {
     console.log(imagePreview);
     try {
       // Read the file as binary data
+      setIsLoading(true);
       const fileUri = imagePreview;
       const fileName = fileUri.split("/").pop(); // Extract the file name from URI
 
@@ -97,8 +97,11 @@ const App = () => {
 
       const data = await response.json();
       console.log(data);
+      setAIResponse(data?.result);
     } catch (error) {
       console.error("Error uploading image:", error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -115,12 +118,21 @@ const App = () => {
               <View>
                 <Image
                   source={{ uri: imagePreview }}
-                  style={{ width: 200, height: 200 }}
+                  style={{ width: 200, height: 100 }}
                 />
-                <Button title="Ask AI" onPress={askAI} />
+                <Button
+                  title={isLoading ? "loading..." : "Ask AI"}
+                  onPress={askAI}
+                />
               </View>
             )}
           </View>
+
+          {aiResponse && (
+            <View>
+              <Text>{aiResponse}</Text>
+            </View>
+          )}
         </View>
       ) : (
         <CameraView style={styles.camera} facing={"front"}>
