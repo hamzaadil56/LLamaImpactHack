@@ -5,7 +5,6 @@
 **Hackathon:** LLAMA IMPACT HACKATHON  
 **Project Name:** Vision Guard  
 **Category:** Health & Wellness  
-**Team Members:** (Add names here if applicable)
 
 ---
 
