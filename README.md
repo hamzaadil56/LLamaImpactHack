@@ -1,6 +1,3 @@
-Here’s an updated **README** file incorporating the additional details about how Vision Guard works and the installation process:
-
----
 
 # VISION GUARD
 ### AI-Driven Eye Health Monitoring Solution
