@@ -133,3 +133,11 @@ def check_for_dry_eyes(
         raise ValueError(f"Unexpected API response structure: {e}")
 
     return response_content
+
+# # test
+# result = check_for_dry_eyes(
+#     image_source="https://thumbs.dreamstime.com/b/human-face-isolated-white-background-spa-portrait-beautiful-fresh-healthy-woman-beauty-close-up-portrait-beautiful-126143418.jpg",
+#     is_url=True                            
+# )
+
+# print(result)
