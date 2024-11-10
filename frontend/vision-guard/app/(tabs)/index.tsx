@@ -59,10 +59,12 @@ const App = () => {
       Alert.alert("No image", "Please capture an image first.");
       return;
     }
-
+    console.log(imagePreview);
     try {
       // Read the file as binary data
       const fileUri = imagePreview;
+      const fileName = fileUri.split("/").pop(); // Extract the file name from URI
+
       const fileBytes = await FileSystem.readAsStringAsync(fileUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -71,18 +73,27 @@ const App = () => {
       const byteArray = Uint8Array.from(atob(fileBytes), (c) =>
         c.charCodeAt(0)
       );
-
+      // const blob = new Blob([byteArray], { type: "image/jpeg" });
+      const responseImg = await fetch(fileUri);
+      const blob = await responseImg.blob();
       const formData = new FormData();
       formData.append("is_url", JSON.stringify(false));
-      formData.append("image", "adsad");
-
-      const response = await fetch("http://localhost:8000/analyze-image/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data", // or application/json, depending on backend
-        },
-        body: formData, // Send byte array directly in body
+      formData.append("image", {
+        uri: fileUri,
+        name: fileName,
+        type: blob.type, // Set the MIME type of the image
       });
+
+      const response = await fetch(
+        "https://44a7-223-29-232-28.ngrok-free.app/analyze-image/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "multipart/form-data", // or application/json, depending on backend
+          },
+          body: formData, // Send byte array directly in body
+        }
+      );
 
       const data = await response.json();
       console.log(data);
